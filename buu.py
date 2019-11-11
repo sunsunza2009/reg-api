@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
 class Campus:	
 	def getAll():
@@ -12,8 +12,8 @@ class Room:
 		self.buildingCode = buildingCode	
 		self._cookie,self._semester = self._getData()
 		today = datetime.now().date()
-		year = str(today.year + 543)
-		startWeek = (today - timedelta(days=today.weekday())).strftime("%d/%m/") + year
+		self.year = str(today.year + 543)
+		self.startWeek = (today - timedelta(days=today.weekday())).strftime("%d/%m/") + self.year
 
 	def _getData(self):
 		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp?f_cmd=1&campusid=1&bc={}".format(self.buildingCode))		
@@ -36,7 +36,25 @@ class Room:
 		room = []
 		for i in item:
 			room.append({"name":i.string,"roomid":i.get('value')})
-		print(room)
+		return room
 
-room =  Room(1,"if")
-room.getAll()
+	def getSchedule(self,roomid):
+		Postdata = {"f_cmd": 1, "campusid": self.campusid, "campusname": "", "bn": "",
+					"acadyear": self.year, "semester": self._semester, "firstday": self.startWeek,
+					"bc": "KB", "roomid" : roomid
+		}
+		proxy = {"http":"http://127.0.0.1:8888","https":"https://127.0.0.1:8888"}
+		r = requests.post("https://reg.buu.ac.th/registrar/room_time.asp", data = Postdata, cookies=self._cookie,proxies=proxy,verify=False)
+		soup = BeautifulSoup(r.text, 'lxml')
+		item = soup.findAll("table")[5]
+		results = {}
+		for i, row in enumerate(item.findAll('tr')):
+			aux = row.findAll('td')
+			results[aux[0].string] = aux[1].string
+
+		print(results)
+		#print(item)
+
+if __name__ == '__main__':
+	room =  Room(1,"if")
+	room.getSchedule("4235")
