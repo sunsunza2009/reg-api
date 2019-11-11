@@ -73,6 +73,10 @@ class util:
 						course["title"] = ""
 					course["start_time"] = int(cur_time + 8)
 					course["end_time"] = int(cur_time + classtime + 8)
+					if(aux[j].has_attr('bgcolor') and aux[j]["bgcolor"] != "#C0D0FF"):
+						course["duplicate"] = True
+					else:
+						course["duplicate"] = False
 					table.append(course)
 				cur_time += classtime
 			if(day not in results.keys()):
@@ -86,7 +90,7 @@ class util:
 		matches = re.finditer(regex, txt, re.MULTILINE)
 		for matchNum, match in enumerate(matches):   
    			return {"course_code":match.group(1),"credit":match.group(2),"group":match.group(3),"type":match.group(4)}
-
+import json
 if __name__ == '__main__':
 	room =  Room(1,"if")
-	room.getSchedule("4235")
+	print(json.dumps(room.getSchedule("4235")))
