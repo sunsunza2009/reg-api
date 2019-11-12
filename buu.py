@@ -2,21 +2,45 @@ import requests, re
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup, Comment
 
-class Campus:   
+class Campus:
 	def getAll():
-		return [{ "name": "บางแสน","campusid": 1}, {"name": "จันทบุรี","campusid": 2}, {"name": "สระแก้ว","campusid": 2} ]
+		return [{ "name": "Bangsaen","campusid": 1}, {"name": "Juntaburi","campusid": 2}, {"name": "Srakaew","campusid": 2} ]
+
+class Building:
+	def __init__(self):   
+		self._cookie = self._getData()
+
+	def _getData(self):
+		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp")        
+		cookie = r.cookies.get_dict()
+		cookie['CKLANG'] = "1"
+		return cookie
+
+	def getAll(self):
+		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp",cookies=self._cookie)
+		soup = BeautifulSoup(r.text, 'lxml')
+		item = soup.findAll("table")[4]
+		building = {}
+		campus = ""
+		for i, row in enumerate(item.findAll('tr')):
+			aux = row.findAll('td')
+			if(row.has_attr('class') and "headerdetail" in row["class"]):
+				campus = aux[1].text.replace("CAMPUS ","").strip()
+			if(campus not in building.keys() and campus != ""):
+				building[campus] = []	
+			if(row.has_attr('class') and "normaldetail" in row["class"] and len(aux) == 3):
+				building[campus].append({"building":aux[1].text.strip(),"name":aux[2].text.replace("\r\n"," ").strip()})
+		return building
 	
 class Room:
-	def __init__(self, campusid, buildingCode):
-		self.campusid = campusid
-		self.buildingCode = buildingCode    
+	def __init__(self):   
 		self._cookie,self._semester = self._getData()
 		today = datetime.now().date()
 		self.year = str(today.year + 543)
 		self.startWeek = (today - timedelta(days=today.weekday())).strftime("%d/%m/") + self.year
 
 	def _getData(self):
-		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp?f_cmd=1&campusid=1&bc={}".format(self.buildingCode))        
+		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp?f_cmd=1&campusid=1&bc=KB")        
 		cookie = r.cookies.get_dict()
 		cookie['CKLANG'] = "1"
 		soup = BeautifulSoup(r.text, 'lxml')
@@ -28,9 +52,9 @@ class Room:
 				if(len(val) < 4 and val != "/" and len(val) > 0):
 					return cookie, val  
 
-	def getAll(self):
+	def getAll(self, campusid, buildingCode):
 		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp?f_cmd=1&campusid={}&bc={}"
-				.format(self.campusid, self.buildingCode.upper()),cookies=self._cookie)
+				.format(campusid, buildingCode.upper()),cookies=self._cookie)
 		soup = BeautifulSoup(r.text, 'lxml')
 		item = soup.find("select", attrs={"name": "roomid"})
 		room = []
@@ -38,8 +62,8 @@ class Room:
 			room.append({"name":i.string,"roomid":i.get('value')})
 		return room
 
-	def getSchedule(self,roomid):
-		Postdata = {"f_cmd": 1, "campusid": self.campusid, "campusname": "", "bn": "",
+	def getSchedule(self, campusid, roomid):
+		Postdata = {"f_cmd": 1, "campusid": campusid, "campusname": "", "bn": "",
 					"acadyear": self.year, "semester": self._semester, "firstday": self.startWeek,
 					"bc": "", "roomid" : roomid
 		}
@@ -92,5 +116,6 @@ class util:
    			return {"course_code":match.group(1),"credit":match.group(2),"group":match.group(3),"type":match.group(4)}
 import json
 if __name__ == '__main__':
-	room =  Room(1,"if")
-	print(json.dumps(room.getSchedule("4235")))
+	build =  Building()
+	#print(json.dumps(room.getAll(1,"KB")))
+	print(json.dumps(build.getAll()))
