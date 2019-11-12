@@ -9,6 +9,8 @@ def index():
 	try:
 		campusid = request.args.get('campus')
 		bc = request.args.get('building')
+		if(campusid is None and bc is None):
+			return jsonify({"error":"campus and building should not be null"}), 400
 		if(campusid is None):
 			return jsonify({"error":"campus should not be null"}), 400
 		if(bc is None):
@@ -23,6 +25,8 @@ def schedule():
 	try:
 		campusid = request.args.get('campus')
 		roomid = request.args.get('room')
+		if(campusid is None and roomid is None):
+			return jsonify({"error":"campus and room should not be null"}), 400
 		if(campusid is None):
 			return jsonify({"error":"campus should not be null"}), 400
 		if(roomid is None):

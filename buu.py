@@ -64,7 +64,9 @@ class Room:
 		item = soup.find("select", attrs={"name": "roomid"})
 		room = []
 		for i in item:
-			room.append({"name":i.string,"roomid":i.get('value')})
+			tmp = util.room2Dict(i.string)
+			tmp["roomid"] = i.get('value')
+			room.append(tmp)
 		return room
 
 	def getSchedule(self, campusid, roomid):
@@ -117,6 +119,12 @@ class util:
 			else:
 				results[day] += table   
 		return results
+
+	def room2Dict(txt):
+		regex = r"(.*) TYPE \: (.*) CAPACITY : (.*) STATUS"
+		matches = re.finditer(regex, txt, re.MULTILINE)
+		for matchNum, match in enumerate(matches):   
+   			return {"name":match.group(1),"type":match.group(2).split("+"),"capacity":int(match.group(3))}
 
 	def desc2Dict(txt):
 		regex = r"([0-9].*)\(([0-9].*)\) ([0-9].*)\, (.*)"
