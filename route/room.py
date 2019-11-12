@@ -15,7 +15,7 @@ def index():
 			return jsonify({"error":"building should not be null"}), 400
 		res = room.getAll(campusid,bc)
 		return jsonify(res)
-	except e:
+	except Exception as e:
 		return jsonify({"error": str(e)}), 500
 
 @api.route("/schedule")
@@ -29,5 +29,5 @@ def schedule():
 			return jsonify({"error":"room should not be null"}), 400
 		res = room.getSchedule(campusid, roomid)
 		return jsonify(res)
-	except e:
+	except Exception as e:
 		return jsonify({"error": str(e)}), 500

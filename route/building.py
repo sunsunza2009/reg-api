@@ -6,4 +6,7 @@ building = Building()
 
 @api.route("/")
 def index():
-	return jsonify(building.getAll())
+	try:
+		return jsonify(building.getAll())
+	except Exception as e:
+		return jsonify({"error": str(e)}), 500

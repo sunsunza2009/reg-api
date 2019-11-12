@@ -1,6 +1,9 @@
 import requests, re
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup, Comment
+import requests_cache
+
+requests_cache.install_cache('buu_cache', backend='sqlite', expire_after=3600)
 
 class Campus:
 	def getAll():
@@ -11,10 +14,11 @@ class Building:
 		self._cookie = self._getData()
 
 	def _getData(self):
-		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp")        
-		cookie = r.cookies.get_dict()
-		cookie['CKLANG'] = "1"
-		return cookie
+		with requests_cache.disabled():
+			r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp")        
+			cookie = r.cookies.get_dict()
+			cookie['CKLANG'] = "1"
+			return cookie
 
 	def getAll(self):
 		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp",cookies=self._cookie)
@@ -40,17 +44,18 @@ class Room:
 		self.startWeek = (today - timedelta(days=today.weekday())).strftime("%d/%m/") + self.year
 
 	def _getData(self):
-		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp?f_cmd=1&campusid=1&bc=KB")        
-		cookie = r.cookies.get_dict()
-		cookie['CKLANG'] = "1"
-		soup = BeautifulSoup(r.text, 'lxml')
-		item = soup.find("select", attrs={"name": "roomid"})
-		item = soup.find("font", attrs={"color": "#800000"})
-		for i in item:
-			if(i.name == None):
-				val = i.string.strip()
-				if(len(val) < 4 and val != "/" and len(val) > 0):
-					return cookie, val  
+		with requests_cache.disabled():
+			r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp?f_cmd=1&campusid=1&bc=KB")        
+			cookie = r.cookies.get_dict()
+			cookie['CKLANG'] = "1"
+			soup = BeautifulSoup(r.text, 'lxml')
+			item = soup.find("select", attrs={"name": "roomid"})
+			item = soup.find("font", attrs={"color": "#800000"})
+			for i in item:
+				if(i.name == None):
+					val = i.string.strip()
+					if(len(val) < 4 and val != "/" and len(val) > 0):
+						return cookie, val  
 
 	def getAll(self, campusid, buildingCode):
 		r = requests.get("https://reg.buu.ac.th/registrar/room_time.asp?f_cmd=1&campusid={}&bc={}"
