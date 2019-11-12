@@ -89,10 +89,14 @@ class util:
 			if(aux[0].string != None and aux[0].string.strip() != ""):
 				day = aux[0].string.strip()
 			table = []
-			cur_time = 0
+			if(not aux[0].has_attr("class")):
+				cur_time = 1
+			else:
+				cur_time = 0
 			for j in range(1,len(aux)-1):
 				txt = aux[j].text.strip() 
 				classtime = int(aux[j]["colspan"])/4		
+
 				if(txt != ""):
 					course = util.desc2Dict(txt)
 					title = aux[j].find("a")
@@ -101,7 +105,7 @@ class util:
 					else:
 						course["title"] = ""
 					course["start_time"] = int(cur_time + 8)
-					course["end_time"] = int(cur_time + classtime + 8)
+					course["end_time"] = course["start_time"] + course["credit"]
 					if(aux[j].has_attr('bgcolor') and aux[j]["bgcolor"] != "#C0D0FF"):
 						course["duplicate"] = True
 					else:
@@ -118,7 +122,7 @@ class util:
 		regex = r"([0-9].*)\(([0-9].*)\) ([0-9].*)\, (.*)"
 		matches = re.finditer(regex, txt, re.MULTILINE)
 		for matchNum, match in enumerate(matches):   
-   			return {"course_code":match.group(1),"credit":match.group(2),"group":match.group(3),"type":match.group(4)}
+   			return {"course_code":match.group(1),"credit":int(match.group(2)),"group":int(match.group(3)),"type":match.group(4)}
 import json
 if __name__ == '__main__':
 	build =  Building()
