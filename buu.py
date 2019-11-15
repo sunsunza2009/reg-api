@@ -7,7 +7,7 @@ requests_cache.install_cache('buu_cache', backend='sqlite', expire_after=3600)
 
 class Campus:
 	def getAll():
-		return [{ "name": "Bangsaen","campusid": 1}, {"name": "Juntaburi","campusid": 2}, {"name": "Srakaew","campusid": 2} ]
+		return [{ "name": "Bangsaen","campusid": 1}, {"name": "Juntaburi","campusid": 2}, {"name": "Srakaew","campusid": 3} ]
 
 class Building:
 	def __init__(self):   
@@ -121,10 +121,17 @@ class util:
 		return results
 
 	def room2Dict(txt):
-		regex = r"(.*) TYPE \: (.*) CAPACITY : (.*) STATUS"
-		matches = re.finditer(regex, txt, re.MULTILINE)
-		for matchNum, match in enumerate(matches):   
-   			return {"name":match.group(1),"type":match.group(2).split("+"),"capacity":int(match.group(3))}
+		try:
+			regex = r"(.*) TYPE \: (.*) CAPACITY : (.*) STATUS"
+			matches = re.finditer(regex, txt, re.MULTILINE)
+			for matchNum, match in enumerate(matches): 
+	   			return {"name":match.group(1),"type":match.group(2).split("+"),"capacity":int(match.group(3))}
+		except Exception as e:
+			regex = r"(.*) TYPE \: (.*) CAPACITY"
+			matches = re.finditer(regex, txt, re.MULTILINE)
+			for matchNum, match in enumerate(matches): 
+	   			return {"name":match.group(1),"type":match.group(2).split("+"),"capacity":-1}
+		
 
 	def desc2Dict(txt):
 		regex = r"([0-9].*)\(([0-9].*)\) ([0-9].*)\, (.*)"
@@ -133,6 +140,5 @@ class util:
    			return {"course_code":match.group(1),"credit":int(match.group(2)),"group":int(match.group(3)),"type":match.group(4)}
 import json
 if __name__ == '__main__':
-	build =  Building()
-	#print(json.dumps(room.getAll(1,"KB")))
+	build =  Building()	
 	print(json.dumps(build.getAll()))
